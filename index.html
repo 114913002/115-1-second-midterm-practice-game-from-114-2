@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>喵汪搶答大賽｜波動與光學</title>
+<!-- 備用字體：粉圓體（可愛圓體）。若有華康娃娃體字型檔，見下方 @font-face -->
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<style>
+/* ========== 字體：華康娃娃體 ==========
+   1. 平板／電腦若已安裝「華康娃娃體」會自動使用（local）
+   2. 若你有合法授權的字型檔，放到 fonts/DFWaWaTC-W5.woff2 即可
+   3. 都沒有時，自動退回粉圓體 */
+@font-face{
+  font-family:"KiWaWa";
+  src:local("DFWaWaTC-W5"),local("DFWaWaTC"),local("華康娃娃體"),
+      url("fonts/DFWaWaTC-W5.woff2") format("woff2"),
+      url("fonts/DFWaWaTC-W5.ttf") format("truetype");
+  font-display:swap;
+}
+:root{--ink:#5a3e2b;--dog:#e9a15a;--cat:#f08fb0;--paper:#fffaf0;--line:#dcc29a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"KiWaWa","DFWaWaTC-W5","華康娃娃體","Huninn","jf-openhuninn","Microsoft JhengHei","PingFang TC",sans-serif;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;background:#cdeaff}
+button{font-family:inherit;color:inherit}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.screen{position:fixed;inset:0;display:none;z-index:2}
+.screen.show{display:flex}
+
+/* ---------- 開始畫面 ---------- */
+#start{align-items:center;justify-content:center;padding:16px}
+.startCard{background:rgba(255,250,240,.93);border:5px solid var(--line);border-radius:36px;padding:24px 34px;
+  text-align:center;max-width:860px;width:100%;box-shadow:0 12px 30px rgba(120,90,50,.25)}
+.startCard h1{margin:0 0 4px;font-size:clamp(30px,5.5vw,58px);color:#e0749a;text-shadow:3px 3px 0 #fff2c4}
+.startCard .sub{font-size:clamp(16px,2.4vw,24px);margin-bottom:8px}
+.startAv{display:flex;justify-content:center;gap:30px}
+.startAv .av{width:clamp(110px,18vw,190px)}
+.rules{text-align:left;font-size:clamp(14px,1.9vw,20px);line-height:1.7;background:#fff;border-radius:20px;padding:10px 20px;margin:8px auto 14px;border:3px dashed #f3c98b}
+.bigBtn{font-size:clamp(22px,3.4vw,34px);padding:10px 44px;border-radius:999px;border:4px solid #fff;
+  background:linear-gradient(#ffb36b,#ff8e72);color:#fff;text-shadow:2px 2px 0 rgba(150,60,30,.35);cursor:pointer;
+  box-shadow:0 6px 0 #d96a4f,0 10px 18px rgba(0,0,0,.2)}
+.bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #d96a4f}
+
+/* ---------- 遊戲畫面 ---------- */
+#game{display:none;grid-template-columns:minmax(170px,22vw) minmax(0,1fr) minmax(170px,22vw);gap:10px;padding:10px}
+#game.show{display:grid}
+.player{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:10px 8px 14px;border-radius:30px;background:rgba(255,255,255,.62);border:5px solid transparent;min-height:0;transition:.25s}
+#pDog{border-color:#f3c48b}#pCat{border-color:#f6b3cb}
+.player.active{background:rgba(255,255,255,.9);transform:scale(1.02)}
+#pDog.active{border-color:#ee8f2f;box-shadow:0 0 0 6px rgba(238,143,47,.28)}
+#pCat.active{border-color:#e65b90;box-shadow:0 0 0 6px rgba(230,91,144,.28)}
+.pname{font-size:clamp(20px,2.8vw,32px)}
+.avWrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;position:relative}
+.av{width:clamp(110px,16vw,190px);aspect-ratio:1;transition:transform .45s cubic-bezier(.3,1.6,.5,1);transform-origin:center}
+.av svg{width:100%;height:100%;overflow:visible}
+.av .eyes-closed,.av .eyes-sad,.av .mouth-happy,.av .mouth-sad,.av .tear{display:none}
+.av.happy{transform:scale(1.45);z-index:5}
+.av.happy .mouth-normal{display:none}.av.happy .mouth-happy{display:block}
+.av.happy .eyes-open{animation:eyeA .9s infinite}
+.av.happy .eyes-closed{display:block;animation:eyeB .9s infinite}
+@keyframes eyeA{0%,38%{opacity:1}46%,86%{opacity:0}94%,100%{opacity:1}}
+@keyframes eyeB{0%,38%{opacity:0}46%,86%{opacity:1}94%,100%{opacity:0}}
+.av.sad{animation:droop 1.2s ease-in-out infinite}
+.av.sad .eyes-open,.av.sad .mouth-normal{display:none}
+.av.sad .eyes-sad,.av.sad .mouth-sad,.av.sad .tear{display:block}
+.av.sad .tear{animation:tear 1.2s infinite}
+@keyframes droop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(5px) rotate(-3deg)}}
+@keyframes tear{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}100%{transform:translateY(22px);opacity:0}}
+.score{font-size:clamp(34px,5vw,60px);line-height:1;margin:4px 0 8px;color:#e0749a;text-shadow:2px 2px 0 #fff}
+.score.pop{animation:pop .5s}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.5)}100%{transform:scale(1)}}
+.score small{font-size:.38em;color:var(--ink);margin-left:4px}
+.buzz{width:100%;max-width:200px;aspect-ratio:1.5;border-radius:50%/60%;border:5px solid #fff;cursor:pointer;
+  font-size:clamp(20px,2.8vw,32px);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.25);transition:.15s}
+#bDog{background:radial-gradient(circle at 35% 30%,#ffd08a,#f08a24);box-shadow:0 8px 0 #b86412,0 12px 18px rgba(0,0,0,.25)}
+#bCat{background:radial-gradient(circle at 35% 30%,#ffc1d8,#e8508a);box-shadow:0 8px 0 #a62d5e,0 12px 18px rgba(0,0,0,.25)}
+.buzz:active:not(:disabled){transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.buzz:disabled{filter:grayscale(.8) brightness(1.05);opacity:.55;cursor:default;box-shadow:none;transform:translateY(6px)}
+.buzz.ready{animation:wob 1.1s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+.center{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.top{display:flex;align-items:center;gap:10px;background:rgba(255,250,240,.92);border:4px solid var(--line);border-radius:22px;padding:6px 14px}
+.qno{font-size:clamp(15px,2vw,22px);white-space:nowrap}
+.timer{flex:1;display:flex;align-items:center;gap:10px}
+.timerNum{font-size:clamp(26px,4vw,46px);min-width:2.2em;text-align:center;color:#3a9d6e}
+.barBox{flex:1;height:18px;background:#e9efe2;border-radius:99px;overflow:hidden;border:3px solid #fff;box-shadow:inset 0 0 0 2px #cfe0c3}
+.bar{height:100%;width:100%;background:linear-gradient(90deg,#7ad39a,#b7e36e);border-radius:99px}
+.timer.warn .timerNum{color:#e8503a;animation:wob .5s infinite}
+.timer.warn .bar{background:linear-gradient(90deg,#ff8a6b,#ffc36b)}
+#muteBtn{border:none;background:none;font-size:26px;cursor:pointer}
+.card{flex:1;min-height:0;overflow:auto;background:rgba(255,250,240,.95);border:5px solid var(--line);border-radius:28px;padding:14px 18px;
+  box-shadow:0 8px 22px rgba(120,90,50,.22);-webkit-overflow-scrolling:touch}
+.qtext{font-size:clamp(16px,2.25vw,26px);line-height:1.65;margin-bottom:8px}
+.qimg{display:block;max-width:100%;max-height:34vh;margin:6px auto 10px;border:2px solid #e8d7b8;border-radius:10px;background:#fff;cursor:zoom-in}
+.missing{margin:6px auto 10px;padding:14px;border:3px dashed #e57373;border-radius:14px;background:#fff1f1;text-align:center;font-size:clamp(13px,1.6vw,18px)}
+.extra table{border-collapse:collapse;margin:6px auto;font-size:clamp(14px,1.8vw,22px)}
+.extra td,.extra th{border:2px solid #bda37a;padding:4px 12px;text-align:center;background:#fff}
+.hint{display:none;background:#fff4c2;border:3px dashed #f0b429;border-radius:16px;padding:8px 14px;margin:6px 0 10px;font-size:clamp(15px,2vw,24px);line-height:1.5}
+.hint.show{display:block;animation:pop .5s}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;font-size:clamp(15px,2.1vw,25px);line-height:1.4;
+  padding:10px 14px;border-radius:18px;border:3px solid #e2c9a0;background:#fff;cursor:pointer;min-height:58px;transition:.15s}
+.opt b{flex:0 0 auto;width:1.9em;height:1.9em;border-radius:50%;background:#ffe3a3;display:grid;place-items:center;font-weight:normal}
+.opt.letterOnly{justify-content:center;font-size:clamp(22px,3vw,34px)}
+.opt:active{transform:scale(.97)}
+.opts.locked .opt{pointer-events:none;opacity:.78}
+.opt.wrong{background:#ffd9d9;border-color:#e57373;opacity:.75;text-decoration:line-through;pointer-events:none}
+.opt.right{background:#d8f5c9;border-color:#4fb36a;animation:pop .6s}
+.msgBar{display:flex;align-items:center;justify-content:center;gap:14px;min-height:60px;background:rgba(255,250,240,.93);
+  border:4px solid var(--line);border-radius:22px;padding:6px 14px;font-size:clamp(17px,2.5vw,30px);text-align:center}
+#nextBtn{display:none;font-size:clamp(17px,2.3vw,28px);padding:6px 26px;border-radius:99px;border:3px solid #fff;
+  background:linear-gradient(#8fd8a8,#4fb36a);color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.25);cursor:pointer;box-shadow:0 4px 0 #378a50}
+
+/* 直式平板 */
+@media (max-aspect-ratio:1/1){
+  #game{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto}
+  .center{grid-column:1/-1;grid-row:1}
+  .player{grid-row:2;flex-direction:row;flex-wrap:wrap;padding:6px 10px;gap:4px;justify-content:space-around}
+  .pname{width:100%;text-align:center;font-size:20px}
+  .avWrap{flex:0 0 auto;width:auto}
+  .av{width:84px}.av.happy{transform:scale(1.3)}
+  .buzz{max-width:140px;aspect-ratio:2}
+  .opts{grid-template-columns:1fr}
+}
+
+/* ---------- 煙火、放大圖 ---------- */
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:70;display:none;align-items:center;justify-content:center}
+#zoom.show{display:flex}#zoom img{max-width:96vw;max-height:94vh;background:#fff;border-radius:10px}
+
+/* ---------- 結算 ---------- */
+#end{flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;overflow:auto}
+.endTitle{font-size:clamp(28px,5vw,52px);color:#e0749a;text-shadow:3px 3px 0 #fff2c4}
+.board{display:flex;gap:26px;align-items:center;background:rgba(255,250,240,.93);border:5px solid var(--line);border-radius:30px;padding:10px 30px}
+.board .one{text-align:center;font-size:clamp(18px,2.6vw,28px)}
+.board .one .av{width:clamp(70px,10vw,110px);margin:0 auto}
+.board .one .n{font-size:clamp(34px,5vw,56px);color:#e0749a}
+.vs{font-size:clamp(22px,3vw,36px)}
+.scrollTip{font-size:clamp(16px,2.4vw,26px);background:rgba(255,250,240,.9);border-radius:99px;padding:2px 18px;animation:wob 1.1s infinite}
+.scroll{width:min(86vw,560px);cursor:pointer;filter:drop-shadow(0 10px 14px rgba(90,60,30,.35));position:relative}
+.rod{height:34px;border-radius:17px;position:relative;background:linear-gradient(#a9622f,#d8975a 45%,#8a4a21);border:3px solid #6e3a18}
+.rod::before,.rod::after{content:"";position:absolute;top:-6px;width:20px;height:40px;border-radius:10px;background:#7c4220;border:3px solid #5c2f14}
+.rod::before{left:-14px}.rod::after{right:-14px}
+.paper{max-height:0;overflow:hidden;margin:0 14px;background:linear-gradient(90deg,#f1dba6,#fff3cf 18%,#fff3cf 82%,#f1dba6);
+  transition:max-height 1.1s ease;border-left:3px solid #d9b877;border-right:3px solid #d9b877}
+.scroll.open .paper{max-height:420px}
+.scroll:not(.open)::after{content:"🎀";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:42px}
+.paperIn{padding:14px 12px 18px;text-align:center}
+.paperIn .av{width:clamp(110px,18vw,160px);margin:0 auto}
+.winner{font-size:clamp(26px,4.4vw,44px);color:#d6455d;margin:4px 0}
+.cong{font-size:clamp(18px,2.8vw,28px);border-top:3px dashed #c9a35b;padding-top:10px;margin-top:8px}
+#again{display:none;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- ============ 水彩遊樂場背景 + 共用濾鏡 ============ -->
+<svg id="bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a6dcff"/><stop offset=".6" stop-color="#d9f2ff"/><stop offset="1" stop-color="#fff4d6"/>
+    </linearGradient>
+    <filter id="wc" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wcs" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="2"/>
+      <feColorMatrix values="0 0 0 0 .5  0 0 0 0 .4  0 0 0 0 .28  0 0 0 .55 0"/></filter>
+    <filter id="blur"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <g filter="url(#blur)" opacity=".55">
+    <ellipse cx="400" cy="200" rx="300" ry="110" fill="#ffd6e7"/>
+    <ellipse cx="1100" cy="130" rx="330" ry="100" fill="#fff0a8"/>
+    <ellipse cx="800" cy="420" rx="360" ry="120" fill="#e3d4ff"/>
+  </g>
+  <g filter="url(#wc)">
+    <circle cx="170" cy="120" r="80" fill="#ffe8a0" opacity=".55"/>
+    <circle cx="170" cy="120" r="56" fill="#ffd95a"/>
+    <g fill="#fff" opacity=".92">
+      <ellipse cx="520" cy="130" rx="90" ry="34"/><ellipse cx="580" cy="108" rx="60" ry="32"/><ellipse cx="460" cy="116" rx="50" ry="26"/>
+      <ellipse cx="980" cy="210" rx="100" ry="36"/><ellipse cx="1050" cy="186" rx="64" ry="34"/><ellipse cx="920" cy="196" rx="52" ry="26"/>
+    </g>
+    <path d="M0 610 Q300 470 640 565 T1260 535 T1600 585 V900 H0Z" fill="#c4eaa9"/>
+    <path d="M0 690 Q380 600 820 690 T1600 670 V900 H0Z" fill="#a2da8f"/>
+    <!-- 摩天輪 -->
+    <path d="M1330 390 L1235 770 M1330 390 L1425 770" stroke="#c9a27e" stroke-width="13" stroke-linecap="round"/>
+    <g transform="translate(1330 390)">
+      <circle r="190" fill="none" stroke="#f48fb1" stroke-width="9"/>
+      <circle r="120" fill="none" stroke="#ffd166" stroke-width="6"/>
+      <path d="M-190 0H190M0 -190V190M-134 -134L134 134M134 -134L-134 134" stroke="#8ecae6" stroke-width="5"/>
+      <g stroke="#fff" stroke-width="3">
+        <rect x="170" y="-14" width="40" height="30" rx="9" fill="#ff8fab"/><rect x="114" y="114" width="40" height="30" rx="9" fill="#ffd166"/>
+        <rect x="-20" y="175" width="40" height="30" rx="9" fill="#8ecae6"/><rect x="-154" y="114" width="40" height="30" rx="9" fill="#b8e986"/>
+        <rect x="-210" y="-14" width="40" height="30" rx="9" fill="#c8a2ff"/><rect x="-154" y="-154" width="40" height="30" rx="9" fill="#ff8fab"/>
+        <rect x="-20" y="-205" width="40" height="30" rx="9" fill="#ffd166"/><rect x="114" y="-154" width="40" height="30" rx="9" fill="#8ecae6"/>
+      </g>
+      <circle r="18" fill="#e76f51"/>
+    </g>
+    <!-- 旋轉木馬 -->
+    <g>
+      <rect x="130" y="545" width="240" height="22" rx="8" fill="#ffd6a5"/>
+      <g stroke="#e9a15a" stroke-width="8" stroke-linecap="round"><path d="M160 545V462M210 545V462M290 545V462M340 545V462"/></g>
+      <polygon points="105,470 250,350 395,470" fill="#fff"/>
+      <polygon points="105,470 250,350 177,470" fill="#ff8fab"/><polygon points="250,350 322,470 250,470" fill="#ff8fab"/>
+      <polygon points="177,470 250,350 250,470" fill="#fff"/><polygon points="250,350 395,470 322,470" fill="#ffc8da"/>
+      <g fill="#ffd166"><circle cx="105" cy="472" r="13"/><circle cx="177" cy="474" r="13"/><circle cx="250" cy="474" r="13"/><circle cx="322" cy="474" r="13"/><circle cx="395" cy="472" r="13"/></g>
+      <circle cx="250" cy="338" r="12" fill="#ff6b8b"/>
+      <ellipse cx="185" cy="510" rx="22" ry="15" fill="#fff"/><circle cx="170" cy="496" r="10" fill="#fff"/>
+      <ellipse cx="315" cy="510" rx="22" ry="15" fill="#b8e0ff"/><circle cx="330" cy="496" r="10" fill="#b8e0ff"/>
+    </g>
+    <!-- 溜滑梯 -->
+    <g stroke-linecap="round" fill="none">
+      <path d="M930 560V690M980 560V690" stroke="#8ecae6" stroke-width="9"/>
+      <path d="M930 600H980M930 640H980" stroke="#8ecae6" stroke-width="7"/>
+      <path d="M980 555 Q1060 620 1130 700" stroke="#ffb703" stroke-width="26"/>
+      <path d="M912 556H1000" stroke="#ff8fab" stroke-width="12"/>
+    </g>
+    <!-- 氣球 -->
+    <g>
+      <path d="M70 330 Q60 420 80 520M150 280 Q165 390 140 520M1480 250 Q1470 330 1490 430" stroke="#9a8a7a" stroke-width="3" fill="none"/>
+      <ellipse cx="70" cy="310" rx="30" ry="38" fill="#ff8fab"/><ellipse cx="150" cy="262" rx="28" ry="36" fill="#ffd166"/>
+      <ellipse cx="1480" cy="230" rx="28" ry="36" fill="#8ecae6"/>
+    </g>
+    <!-- 樹 -->
+    <rect x="1500" y="600" width="22" height="100" fill="#b98a5e"/><circle cx="1511" cy="570" r="62" fill="#7fcf86"/><circle cx="1475" cy="610" r="42" fill="#98dc92"/>
+    <rect x="15" y="610" width="20" height="90" fill="#b98a5e"/><circle cx="25" cy="585" r="52" fill="#8ad98f"/>
+    <path d="M0 830 Q800 770 1600 840 V900 H0Z" fill="#f3d9a4"/>
+    <g>
+      <circle cx="610" cy="770" r="9" fill="#ff8fab"/><circle cx="640" cy="790" r="8" fill="#ffd166"/><circle cx="880" cy="760" r="9" fill="#c8a2ff"/>
+      <circle cx="1100" cy="790" r="8" fill="#ff8fab"/><circle cx="420" cy="760" r="8" fill="#ffd166"/>
+    </g>
+  </g>
+  <rect width="1600" height="900" filter="url(#paper)" opacity=".4"/>
+</svg>
+
+<!-- ================= 開始畫面 ================= -->
+<section id="start" class="screen show">
+  <div class="startCard">
+    <h1>🎪 喵汪搶答大賽 🎪</h1>
+    <div class="sub">八年級理化｜波動、聲音與光學</div>
+    <div class="startAv"><div class="av" id="sDog"></div><div class="av" id="sCat"></div></div>
+    <div class="rules">
+      🔔 <b>先按搶答鍵</b>的玩家才能作答，共 <b>20</b> 題，每題 <b>90</b> 秒。<br>
+      ✅ 答對 +1 分，放煙火！　❌ 答錯 −1 分（可以是負分），只給<b>提示</b>，換另一位作答。<br>
+      ⏰ 時間到沒人作答，雙方各 0 分。
+    </div>
+    <button class="bigBtn" id="startBtn">開始遊戲</button>
+  </div>
+</section>
+
+<!-- ================= 遊戲畫面 ================= -->
+<section id="game" class="screen">
+  <div class="player" id="pDog">
+    <div class="pname">🐶 小狗</div>
+    <div class="avWrap"><div class="av" id="avDog"></div></div>
+    <div class="score" id="scDog">0<small>分</small></div>
+    <button class="buzz" id="bDog">汪！搶答</button>
+  </div>
+
+  <div class="center">
+    <div class="top">
+      <div class="qno" id="qno">第 1 / 20 題</div>
+      <div class="timer" id="timer">
+        <div class="timerNum" id="timerNum">90</div>
+        <div class="barBox"><div class="bar" id="bar"></div></div>
+      </div>
+      <button id="muteBtn" title="音效開關">🔊</button>
+    </div>
+    <div class="card" id="card">
+      <div class="qtext" id="qtext"></div>
+      <div id="imgBox"></div>
+      <div class="extra" id="extra"></div>
+      <div class="hint" id="hint"></div>
+      <div class="opts locked" id="opts"></div>
+    </div>
+    <div class="msgBar"><span id="msg">準備好了嗎？</span><button id="nextBtn">下一題 ▶</button></div>
+  </div>
+
+  <div class="player" id="pCat">
+    <div class="pname">🐱 小貓</div>
+    <div class="avWrap"><div class="av" id="avCat"></div></div>
+    <div class="score" id="scCat">0<small>分</small></div>
+    <button class="buzz" id="bCat">喵！搶答</button>
+  </div>
+</section>
+
+<!-- ================= 結算畫面 ================= -->
+<section id="end" class="screen">
+  <div class="endTitle">🏁 比賽結束！</div>
+  <div class="board">
+    <div class="one"><div class="av" id="eDog"></div>小狗<div class="n" id="eDogS">0</div></div>
+    <div class="vs">VS</div>
+    <div class="one"><div class="av" id="eCat"></div>小貓<div class="n" id="eCatS">0</div></div>
+  </div>
+  <div class="scrollTip" id="scrollTip">👆 點一下卷軸，看看誰是贏家！</div>
+  <div class="scroll" id="scroll">
+    <div class="rod"></div>
+    <div class="paper"><div class="paperIn" id="paperIn"></div></div>
+    <div class="rod"></div>
+  </div>
+  <button class="bigBtn" id="again">再玩一次</button>
+</section>
+
+<canvas id="fx"></canvas>
+<div id="zoom"><img alt=""></div>
+
+<script>
+/* =====================================================
+   題庫設定
+   - 有圖片的題目：把 PDF 截圖存成  images/q02.png 這種檔名（兩位數題號）
+   - img:true            → 顯示題目圖片
+   - optInImg:true       → 選項在圖片裡，畫面只顯示 A B C D 按鈕
+   - off:true            → 暫不出題（答案待確認）
+   - a：正確答案（0=A, 1=B, 2=C, 3=D）
+   ===================================================== */
+const IMG_DIR = "images/", IMG_EXT = ".png";
+const TOTAL = 20, TIME = 90;
+
+const QUESTIONS = [
+{n:1,q:`以下為一篇關於物質波的報導：\n「物質波」是德布羅意提出的假說。他認為，一切具有動量的物質，都具有波動性。例如電子束在某些實驗中會展現出像光波一樣的繞射和干涉現象，證明了物質確實具有波動性。物質波並非像水波或聲波那樣需要介質傳播……。\n根據上述資訊，下列有關物質波的敘述何者最合理？`,
+ opts:["與水波一樣都屬於力學波","與電磁波一樣都屬於力學波","與光波一樣都不屬於力學波","與超聲波一樣都不屬於力學波"],a:2,
+ hint:"力學波一定要靠介質傳播。報導裡說物質波需不需要介質？再逐一想想水波、電磁波、光波、超聲波是不是力學波。"},
+{n:2,img:true,q:`縱波的定義為：「介質振動的方向與波前進的方向平行」，請問下列哪些波動屬於「縱波」？（甲～丁見圖）`,
+ opts:["甲丙","甲丁","乙丙","乙丁"],a:0,
+ hint:"縱波的介質是「前後推擠」，會出現疏、密相間的區域。仔細看哪幾張圖有這個特徵。"},
+{n:3,img:true,q:`繩波在某時刻的波形圖如圖（波傳播方向向左），對此繩波上甲、乙、丙、丁四點在下一瞬間振動情形的敘述何者錯誤？`,
+ opts:["甲點將向下振動","乙、丙兩點將振動方向相同","乙點將向上振動","甲、丁兩點將振動方向相反"],a:1,
+ hint:"波往左走，每一點下一瞬間會「學」它右邊鄰居現在的位置。看看各點右邊是比較高還是比較低。"},
+{n:4,off:true,img:true,q:`小景手持繩子一端上下振動，產生一連續的週期波沿繩子傳播。在 2 秒末時，繩波的瞬間波形如下圖所示，則下列敘述何者正確？`,
+ opts:["此波的振幅為 10 cm","此波的波長為 40 cm","此波的頻率為 0.5 Hz","此波的波速為 40 cm/s"],a:2,
+ hint:"振幅是從平衡位置量到波峰；波長是一個完整波的長度。"},
+{n:5,img:true,q:`以繩波產生器製造數個連續且完全相同的繩波，繩波上某一點的振動位移與時間關係如圖所示，由此圖無法得知下列何種資訊？\n(甲)波長　(乙)振幅　(丙)頻率　(丁)波速`,
+ opts:["甲丁","丙丁","乙丙","甲丙丁"],a:0,
+ hint:"注意這張圖的橫軸是「時間」，不是「位置」。只看時間圖，能得到哪些量？"},
+{n:6,q:`關於「週期」與「頻率」的比較，下列敘述何者錯誤？`,
+ opts:["單位：週期為 1/s，頻率為 s","定義：週期是產生一個全波所需的時間；頻率是一秒內產生全波的數目","符號：週期為 T，頻率為 f","數學式：週期 × 頻率 ＝ 1"],a:0,
+ hint:"頻率的單位是赫茲（Hz），週期的單位是秒。想想「一秒內幾次」與「一次幾秒」的單位各是什麼。"},
+{n:7,q:`某地發生劇烈雷暴，一位民眾當時正在一棟大樓的頂樓拍攝閃電擊中地面物體的影片。該民眾估計他與閃電擊中點的直線距離約 2.0 km。假設當時環境溫度使聲速約為 340 m/s，且光速極快，則有關此目擊者所拍攝的影片，下列描述何者最合理？\n（註：「雷暴」是指同時伴隨雷聲、閃電與強降雨的天氣現象。）`,
+ opts:["影片中聽到雷聲後約經過 5~6 秒才看到閃電","影片中看到閃電後約經過 5~6 秒才聽到雷聲","影片中聽到雷聲後約經過 0.5~0.6 秒才看到閃電","影片中看到閃電後約經過 0.5~0.6 秒才聽到雷聲"],a:1,
+ hint:"光幾乎瞬間就到。聲音要走 2000 公尺，用「時間 ＝ 距離 ÷ 速率」算算看，並想想誰先到。"},
+{n:8,q:`關於聲音的產生，阿翰和小雅分別提出他們的見解，請問兩人的說法是否正確？\n阿翰：當物體發生振動時，我們有可能不會聽見聲音\n小雅：當物體沒有聲音傳出，物體有可能發生振動`,
+ opts:["阿翰說法錯誤","小雅說法錯誤","兩人說法皆正確","兩人說法皆錯誤"],a:2,
+ hint:"想想人耳的可聽頻率範圍，還有在真空中物體振動時，聲音傳不傳得出來。"},
+{n:9,q:`下列有幾項因素會影響聲音在空氣中傳播的快慢？\n(甲)傳遞介質的種類　(乙)聲音響度的大小\n(丙)聲音音調的高低　(丁)空氣溫度的高低\n(戊)講話的語速快慢`,
+ opts:["2 項","3 項","4 項","5 項"],a:0,
+ hint:"改變聲音的「大小、高低、說話快慢」，聲速會變嗎？聲速其實只跟介質本身的狀態有關。"},
+{n:10,q:`水上芭蕾的舞者可以聽到岸上傳來的音樂，請問當聲波由空氣中傳到水面下時，聲音的哪些物理量會產生變化？\n(甲)頻率；(乙)速率；(丙)週期；(丁)振幅；(戊)波長`,
+ opts:["甲乙丙丁","乙丁戊","甲丙丁","乙丁"],a:1,
+ hint:"頻率由聲源決定，換介質時不變。可是水中的聲速變了，再用 v ＝ f × λ 想想波長會怎樣。"},
+{n:11,img:true,q:`安安學完波以耳實驗後，將實驗再做更進一步的探討，重新設計了以下的實驗。他將響鈴懸吊在密閉的玻璃罩內，經過一段時間後，請選出安安幾乎聽不到鈴聲是下列哪一個階段？（階段甲、乙、丙見圖）`,
+ opts:["乙","甲丙","乙丙","甲乙丙"],a:0,
+ hint:"聲音需要介質才能傳播。看圖，哪個階段玻璃罩裡幾乎沒有介質？"},
+{n:12,img:true,q:`如圖，以下為小明媽媽和小明的對話，媽媽的聲音大而音調高，小明回答的聲音小而音調低，請問哪一個人的聲音可以傳得遠？哪一個人的聲音可以傳得快？`,
+ opts:["傳得遠：小明媽媽；傳得快：小明媽媽","傳得遠：小明媽媽；傳得快：兩人一樣快","傳得遠：兩人一樣遠；傳得快：小明媽媽","傳得遠：兩人一樣遠；傳得快：兩人一樣快"],a:1,
+ hint:"「傳得遠」跟聲音的哪個特性有關？「傳得快」又跟什麼有關？（想想同樣的空氣、同樣的溫度）"},
+{n:13,q:`貓咪有時會發出「呼嚕聲」，此聲音通常是在貓咪覺得環境舒適，讓牠感到安心時發出，但據說貓咪療傷時也可能發出這樣的聲音，某研究測得此種「呼嚕聲」頻率約在 21～27 赫茲。則下列有關貓咪「呼嚕聲」聲波的敘述，何者與上述資訊相符？`,
+ opts:["週期約在 1/27～1/21 s","週期約在 1/27～1/21 1/s","音量約在 1/27～1/21 dB","音量約在 21～27 dB"],a:0,
+ hint:"頻率與週期互為倒數，而且要注意單位。赫茲（Hz）是頻率的單位，不是音量（dB）。"},
+{n:14,q:`交響樂團在音樂會開始前，通常由雙簧管吹奏者吹出一個標準音，讓其他演奏者聽著這個標準音來進行調音，使各樂器的音高相同，此過程中，不同樂器演奏者調整的目的，是使聲波何種性質與標準音相同？`,
+ opts:["頻率","波形","振幅","速率"],a:0,
+ hint:"「音高」就是音調的高低，它是由聲波的哪個物理量決定的呢？"},
+{n:15,img:true,q:`如圖，莉莉在三支大小相同的試管內裝入不同高度的水，先用小鎚敲打三支試管，再用嘴對著三支試管管口吹氣，發現所發出的音調有明顯高低的不同。關於此實驗的說明，下列敘述何者正確？\n(甲)敲打時，空氣柱愈短，試管發出聲音的音調愈高\n(乙)吹氣時，水柱愈短，試管發出聲音的音調愈高\n(丙)若吹出的音調愈高，代表試管內空氣柱振動的頻率愈快\n(丁)所吹出的響度愈大，代表試管內空氣柱振動頻率愈高`,
+ opts:["丙","甲乙","甲乙丙","甲乙丁"],a:0,
+ hint:"敲打時振動的是「試管和水」，水愈多愈重；吹氣時振動的是「空氣柱」。另外，響度和頻率有關係嗎？"},
+{n:16,img:true,q:`科科參加學校的吉他社，老師拿了一把吉他並解釋其構造，如圖所示，吉他的第六根弦最粗，第一根弦最細，小明將手指分別按在甲、乙、丙、丁等四處，分別彈奏時，在哪一個位置所發出的音調最高？`,
+ opts:["甲","乙","丙","丁"],a:3,
+ hint:"弦愈細、愈短，音調愈高。圖中「手指振彈之處」在下方 A，看看哪個位置離 A 最近、弦又最細。"},
+{n:17,q:`阿文想要讓走廊遠處的同學聽到他的喊叫，順手拿起桌上的墊板捲成圓錐狀，放在嘴巴前面，以便讓聲音傳得更遠，阿文做法的原理最接近下列何者？`,
+ opts:["用超音波清洗機清洗眼鏡","雙層窗戶中間抽真空，阻絕噪音","醫生用聽診器聽病患的心跳聲","水上芭蕾舞者，頭在水中仍可聞聲起舞"],a:2,
+ hint:"圓錐的作用是把聲音「集中」往同一方向傳，減少向四面散開。哪個例子也是在集中聲音？"},
+{n:18,q:`小景、小興在同一地點，同時向同一障礙面發出聲音，小景聲音尖銳但小聲，小興聲音低沉卻大聲，聲音遇到障礙面後產生回聲。下列關於兩人回聲的敘述，何者正確？`,
+ opts:["先聽到小景的回聲，因為頻率較高","先聽到小興的回聲，因為響度較大","同時聽到小景、小興的回聲，因為波長相同","同時聽到小景、小興的回聲，因為聲速相同"],a:3,
+ hint:"回聲回來的時間取決於「路程」和「聲速」。尖不尖銳、大不大聲會改變聲速嗎？兩人的波長相同嗎？"},
+{n:19,q:`體育老師將桌球高高舉起，然後放手，使得桌球在球桌上咚、咚、咚的不斷上下跳動，5秒鐘內桌球共來回跳動 15 次，請問耳朵聽到桌球撞擊球桌所發出的聲音，其頻率可能是下列何者？`,
+ opts:["1/3 Hz","3 Hz","3000 Hz","30000 Hz"],a:2,
+ hint:"題目問的是「聲音」的頻率，不是球跳動的次數。人耳能聽到的範圍大約是 20～20000 Hz。"},
+{n:20,q:`人們使用超音波牙刷清潔牙齒時，牙刷會發出高頻率的振動，能使牙膏中的微氣泡破裂以清除牙菌斑。當人使用超音波牙刷時，對牙刷發出的超音波，下列說明何者最合理？\n（超聲波亦稱作超音波）`,
+ opts:["使用時會聽見低沉的轟隆聲","使用時會聽見尖銳刺耳的聲音","因頻率過高，故人聽不見超音波","因波速過快，故人聽不見超音波"],a:2,
+ hint:"超音波是頻率「高於」人耳可聽範圍的聲波。人聽得到與否，跟波速快不快有關嗎？"},
+{n:21,q:`在日常生活中，我們常能觀察到光的各種傳播現象，例如物體的影子、古代的計時工具日晷……等。關於光的傳播，下列敘述何者錯誤？`,
+ opts:["光在真空中仍可傳播","光在不同物質中傳播速率不相同","針孔成像是應用光直線傳播的原理","看到水中的倒影是應用光直線傳播的原理"],a:3,
+ hint:"水中倒影和照鏡子是同一類光學現象，它屬於光的「直線傳播」、「反射」還是「折射」？"},
+{n:22,img:true,optInImg:true,q:`小興以 LED 燈排列成字母作為發光體，置於紙箱外進行針孔成像實驗，屏幕成像如圖所示。若由圖中小興眼睛的方位看發光體，最可能排成下列何者？（選項見圖）`,
+ opts:["A","B","C","D"],a:0,
+ hint:"針孔成像是上下顛倒、左右也相反的倒立實像（相當於旋轉 180°）。把圖中的像轉 180° 看看，再注意眼睛的位置。"},
+{n:23,q:`當陽光從太空中穿越地球大氣層，再進入海水中時，會因為所經介質不同而改變其傳播速率。請問在這個過程中，光的傳播速率變化情形為何？`,
+ opts:["先變慢再變快","先變快再變慢","逐漸變快","逐漸變慢"],a:3,
+ hint:"光在真空中最快，介質愈「密」通常傳得愈慢。依序經過：太空 → 大氣 → 海水。"},
+{n:24,img:true,optInImg:true,q:`佳佳在暗室裡進行以下的實驗，她在紙板中間割成笑臉的形狀，實驗的示意圖如圖所示（蠟燭、紙板、屏幕），請問在屏幕上的成像，何者最為合理？（選項見圖）`,
+ opts:["A","B","C","D"],a:3,
+ hint:"紙板上的洞是「笑臉形狀的大洞」，不是小小的針孔。蠟燭火焰很小，可以當成一個小光源；光直線穿過洞後，屏幕上亮的地方會是什麼形狀？方向會顛倒嗎？"},
+{n:25,img:true,q:`如圖，已知平面鏡 M1 與 M2 的夾角為 60°，入射線 L1 與平面鏡 M1 夾 45°角入射，經過平面鏡 M1 產生第 1 次反射，射向平面鏡 M2 產生第 2 次反射後，反射線 L2 與平面鏡 M2 的反射角夾角多少度？`,
+ opts:["15°","30°","45°","60°"],a:0,
+ hint:"畫出法線！反射角＝入射角，且都是「和法線」的夾角。先用三角形內角和算出光線打到 M2 時和 M2 鏡面的夾角，再換成和法線的夾角。"},
+{n:26,q:`瑞瑞利用平面鏡進行光的反射與成像實驗。他將一個高 10 cm 的不透明物體放在距離平面鏡 25 cm 處，觀察物體在平面鏡中所形成的像。下列關於此物體在平面鏡中所形成的像的敘述，何者正確？`,
+ opts:["所成的像是倒立實像，像的大小會隨著物體距離平面鏡的遠近而改變","所成的像大小為 10 cm，且像是正立虛像，像的位置在鏡後 25 cm 處","所成的像大小為 10 cm，且像是正立虛像，像距大於物距","所成的像是正立虛像，且像與物體相比，是上下顛倒，左右相同的關係"],a:1,
+ hint:"回想平面鏡成像的特性：像與物等大、像距與物距的關係、實像或虛像、以及左右是否相反。"},
+{n:27,img:true,q:`如圖，汪汪和喵喵分別站在甲、乙兩面鏡的前方，汪汪呈現縮小的像，喵喵呈現放大的像，請問甲、乙兩面鏡為何種面鏡？`,
+ opts:["甲：凸面鏡；乙：平面鏡","甲：凸面鏡；乙：凹面鏡","甲：凹面鏡；乙：平面鏡","甲：凹面鏡；乙：凸面鏡"],a:1,
+ hint:"平面鏡的像與物一樣大。哪種面鏡成縮小的像？哪種面鏡在近距離時成放大的像？"},
+{n:28,img:true,q:`光線由空氣射入玻璃，交界面上發生的反射與折射如圖所示。關於反射角 a 及折射角 b 的大小，下列何者正確？`,
+ opts:["a＝b＝30°","a＝30°，b＝60°","a＝60°，b＜60°","a＝30°，b＜30°"],a:2,
+ hint:"入射角、反射角、折射角都是「和法線」的夾角。圖中標示的 30°，是和誰的夾角？光進入玻璃會偏向還是遠離法線？"},
+{n:29,img:true,q:`如圖所示，河面上方 2 公尺處有一隻鳥，湖面下方 2 公尺處有一條魚，由於光線折射，從鳥的眼睛看魚與從魚的眼睛看鳥，(甲)~(丁)四個敘述哪些正確？\n(甲)從鳥的眼睛看魚，魚的深度大於 2 公尺\n(乙)從鳥的眼睛看魚，魚的深度小於 2 公尺\n(丙)從魚的眼睛看鳥，鳥的高度大於 2 公尺\n(丁)從魚的眼睛看鳥，鳥的高度小於 2 公尺`,
+ opts:["甲丙","乙丙","乙丁","甲丁"],a:1,
+ hint:"站在岸邊看水裡的東西，總覺得它比實際「淺」還是「深」？兩個方向的光線折射情形是相反的喔。"},
+{n:30,img:true,optInImg:true,q:`瑞瑞在池塘邊正好觀察到水中的魚跳躍出水面抓蟲吃的畫面，請問下列何者為這段過程中魚看見水面上方昆蟲的正確光線路徑圖？（選項見圖）`,
+ opts:["A","B","C","D"],a:1,
+ hint:"光是從「昆蟲」射向「魚的眼睛」，箭頭方向要正確；光由空氣進入水中，會偏向還是遠離法線？"},
+{n:31,img:true,optInImg:true,q:`已知下列各選項皆為光線經過透鏡的示意圖，請問哪一個選項中，光線經透鏡折射後的圖形錯誤？（選項見圖）`,
+ opts:["A","B","C","D"],a:1,
+ hint:"複習三條特殊光線：平行主軸 → 過焦點；過焦點 → 平行主軸；過透鏡中心 → 直進。凹透鏡則是發散，反向延長線過焦點。"},
+{n:32,img:true,q:`安安進行凸透鏡成像實驗，如圖為其所用實驗裝置示意圖，當蠟燭放在凸透鏡左側不同位置，安安調整紙屏位置直到可在紙屏觀察到清晰成像，再拿掉紙屏換以眼睛直接透過凸透鏡觀察蠟燭。下列何者是安安實驗過程中可看到的情形？`,
+ opts:["當蠟燭放在甲區域，紙屏移到丙區域會找到清晰的成像","當蠟燭放在甲區域，安安透過透鏡會觀察到縮小的蠟燭","當蠟燭放在乙區域，紙屏移到丁區域會找到清晰的成像","當蠟燭放在乙區域，安安透過透鏡會觀察到放大的蠟燭"],a:3,
+ hint:"先看清楚圖中 2F、F 與甲乙丙丁各區域的位置。物距小於焦距時，成像在哪一側？能用紙屏接到嗎？"},
+{n:33,img:true,q:`取焦距皆為 10 cm 的凸透鏡與凹透鏡，分別將同樣的蠟燭置於兩透鏡前 20 cm 處，如圖所示，關於蠟燭成像，下列敘述何者正確？`,
+ opts:["凸透鏡：像與蠟燭同側、凹透鏡：像與蠟燭異側","凸透鏡：像與蠟燭異側、凹透鏡：像與蠟燭同側","凸透鏡、凹透鏡：皆看不到蠟燭成像","凸透鏡、凹透鏡：蠟燭皆可在紙屏成像"],a:1,
+ hint:"物距 20 cm 剛好是 2 倍焦距，凸透鏡會成什麼像？凹透鏡則永遠只能成哪一種像？"},
+{n:34,img:true,q:`下圖為某漫畫的一小段情節，已知圖中的大雄患有高度近視。老師請甲、乙、丙、丁四位同學針對此段情節，以光學的知識來提出看法，敘述如下：\n甲：合乎光學知識，主角的鏡片為凹透鏡，可以聚光\n乙：合乎光學知識，主角的鏡片為凸透鏡，可以聚光\n丙：不合光學知識，主角的鏡片為凹透鏡，不能聚光\n丁：不合光學知識，主角的鏡片為凸透鏡，不能聚光\n哪一位同學的敘述最為合理？`,
+ opts:["甲同學","乙同學","丙同學","丁同學"],a:2,
+ hint:"高度近視戴的是哪一種透鏡？這種透鏡會讓光線會聚還是發散？"},
+{n:35,q:`小景和小興看到夕陽很美，拿出手機拍照。此時夕陽在眼睛的視網膜上成像，也在手機照相機的感光元件上成像，小景和小興討論這兩種成像，各有以下說法：\n小景：在照相機感光元件上的成像、在眼睛視網膜上的成像，都是縮小的像。\n小興：在照相機感光元件上的成像是實像；在眼睛視網膜的成像是虛像。`,
+ opts:["小景、小興的說法皆正確","小景、小興的說法皆不正確","小景的說法正確，小興的說法不正確","小景的說法不正確，小興的說法正確"],a:2,
+ hint:"遠處景物經凸透鏡所成的像，大小如何？視網膜和感光元件都能「接收」到像，想想這是實像還是虛像。"},
+{n:36,img:true,q:`小宇用凸透鏡做成像實驗，裝置如圖。p 為燭火至透鏡的距離，q 為紙屏上得到最清晰圖像時，紙屏至透鏡的距離。調整 p 值、測量相對應的 q 值，結果如下表。當 p＝16 公分時，在紙屏上所成的像為下列何者？`,
+ html:`<table><tr><th>p(公分)</th><td>24</td><td>28</td><td>30</td><td>40</td><td>60</td><td>90</td><td>120</td></tr><tr><th>q(公分)</th><td>120</td><td>70</td><td>59</td><td>40</td><td>30</td><td>26</td><td>24</td></tr></table>`,
+ opts:["倒立縮小實像","正立放大虛像","倒立放大實像","在紙屏上不成像"],a:3,
+ hint:"從表格找出 p ＝ q 的那一組，就能知道 2 倍焦距，進而算出焦距。再比較 16 公分與焦距的大小，注意題目問的是「在紙屏上」。"},
+{n:37,img:true,optInImg:true,q:`毛毛在白紙上寫上「景興國中」四個字，如圖所示，字體經過各副眼鏡時，呈現不同的成像如下圖的各選項所示。毛毛看到成像後，確定其中一副眼鏡是近視眼鏡，請問毛毛指的是哪一副眼鏡？（選項見圖）`,
+ opts:["A","B","C","D"],a:2,
+ hint:"近視眼鏡是凹透鏡。凹透鏡所成的像有什麼特徵？（大小、正立或倒立）"},
+{n:38,img:true,optInImg:true,q:`小華將白光、紅光、綠光及藍光四種不同的色光照射在紅色玻璃片上，若實線表示透射光線，虛線表示無透射光線，透過紅色玻璃片之光線路徑圖，下列何者正確？（選項見圖）`,
+ opts:["A","B","C","D"],a:1,
+ hint:"紅色玻璃片只讓哪種色光通過？其他色光會被吸收。白光裡面又含有哪些色光？"},
+{n:39,img:true,optInImg:true,q:`老師利用紅色、綠色、藍色三種玻璃紙，依下列步驟觀察光透過玻璃紙後照射在各色(紅、綠、白、藍、黑)紙上的現象。\n【步驟一】將五張色紙放置於暗箱中\n【步驟二】以白色光源，透過不同的玻璃紙，照射暗箱中的色紙，如圖所示\n【步驟三】下表有關色紙在不同情境下所呈現的顏色，哪個選項最為可能？（選項見圖）`,
+ opts:["A","B","C","D"],a:3,
+ hint:"玻璃紙會把白光過濾成單一色光；色紙只會反射和自己相同的色光，白紙反射所有色光，黑紙全部吸收。"},
+{n:40,img:true,q:`下圖為理化國中夏季與冬季的制服，夏季制服選用白色，穿起來較涼爽；冬季制服選用黑色，穿起來較保暖，其原因為何？`,
+ opts:["白色會反射白光，黑色會反射黑光","白色不會反射色光，黑色不會吸收色光","白色會反射各色光，黑色會吸收各色光","白色會吸收各色光，黑色會反射各色光"],a:2,
+ hint:"涼爽表示不太吸收光（熱），保暖表示吸收很多光（熱）。哪種顏色會反射、哪種會吸收各色光？"}
+];
+
+/* =====================================================
+   小狗、小貓 avatar（水彩手繪風 SVG）
+   ===================================================== */
+const EYES = (lx, rx, y) => `
+  <g class="eyes-open"><circle cx="${lx}" cy="${y}" r="9" fill="#3a2a22"/><circle cx="${lx+3}" cy="${y-3}" r="3.2" fill="#fff"/>
+   <circle cx="${rx}" cy="${y}" r="9" fill="#3a2a22"/><circle cx="${rx+3}" cy="${y-3}" r="3.2" fill="#fff"/></g>
+  <g class="eyes-closed" fill="none" stroke="#3a2a22" stroke-width="4.5" stroke-linecap="round">
+   <path d="M${lx-11} ${y+3} Q${lx} ${y-10} ${lx+11} ${y+3}"/><path d="M${rx-11} ${y+3} Q${rx} ${y-10} ${rx+11} ${y+3}"/></g>
+  <g class="eyes-sad"><ellipse cx="${lx}" cy="${y+3}" rx="8" ry="9" fill="#3a2a22"/><circle cx="${lx+2}" cy="${y}" r="3.4" fill="#fff"/>
+   <ellipse cx="${rx}" cy="${y+3}" rx="8" ry="9" fill="#3a2a22"/><circle cx="${rx+2}" cy="${y}" r="3.4" fill="#fff"/>
+   <path d="M${lx-14} ${y-12} L${lx+10} ${y-6} M${rx+14} ${y-12} L${rx-10} ${y-6}" stroke="#3a2a22" stroke-width="4" stroke-linecap="round"/></g>
+  <g class="tear"><path d="M${lx-6} ${y+16} q-8 14 0 18 q8 -4 0 -18z" fill="#8fd1ff" stroke="#5ba9e0" stroke-width="1.5"/></g>`;
+
+const SVG_DOG = `<svg viewBox="0 0 200 200"><g filter="url(#wcs)">
+  <ellipse cx="42" cy="88" rx="26" ry="48" fill="#b57843" stroke="#7a4a26" stroke-width="3" transform="rotate(16 42 88)"/>
+  <ellipse cx="158" cy="88" rx="26" ry="48" fill="#b57843" stroke="#7a4a26" stroke-width="3" transform="rotate(-16 158 88)"/>
+  <ellipse cx="100" cy="108" rx="68" ry="62" fill="#f8dcae" stroke="#7a4a26" stroke-width="3"/>
+  <ellipse cx="66" cy="86" rx="26" ry="24" fill="#d39a62" opacity=".6"/>
+  <circle cx="52" cy="124" r="11" fill="#ff9aa8" opacity=".6"/><circle cx="148" cy="124" r="11" fill="#ff9aa8" opacity=".6"/>
+  <ellipse cx="100" cy="128" rx="32" ry="23" fill="#fff6e2"/>
+  <ellipse cx="100" cy="114" rx="12" ry="8.5" fill="#5b3a29"/><ellipse cx="96" cy="111" rx="3.5" ry="2" fill="#fff" opacity=".7"/>
+  ${EYES(72,128,96)}
+  <g class="mouth-normal" fill="none" stroke="#6b3a24" stroke-width="3" stroke-linecap="round"><path d="M100 122v7M100 129q-9 9 -19 2M100 129q9 9 19 2"/></g>
+  <g class="mouth-happy"><path d="M80 128 Q100 156 120 128 Z" fill="#d9534f" stroke="#6b3a24" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="142" rx="10" ry="6" fill="#ff8fa3"/></g>
+  <g class="mouth-sad" fill="none" stroke="#6b3a24" stroke-width="3.5" stroke-linecap="round"><path d="M100 122v6M82 144 Q100 126 118 144"/></g>
+</g></svg>`;
+
+const SVG_CAT = `<svg viewBox="0 0 200 200"><g filter="url(#wcs)">
+  <path d="M30 80 L38 20 L90 52 Z" fill="#f4a259" stroke="#8a4b2a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M170 80 L162 20 L110 52 Z" fill="#f4a259" stroke="#8a4b2a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M44 64 L47 38 L70 52Z" fill="#ffb3c1"/><path d="M156 64 L153 38 L130 52Z" fill="#ffb3c1"/>
+  <ellipse cx="100" cy="110" rx="72" ry="62" fill="#f9b96e" stroke="#8a4b2a" stroke-width="3"/>
+  <path d="M100 50v18M85 53l3 14M115 53l-3 14" stroke="#d9822b" stroke-width="4.5" stroke-linecap="round"/>
+  <ellipse cx="100" cy="132" rx="35" ry="24" fill="#fff6e5"/>
+  <circle cx="50" cy="122" r="11" fill="#ff9aa8" opacity=".6"/><circle cx="150" cy="122" r="11" fill="#ff9aa8" opacity=".6"/>
+  <path d="M62 122 L22 112M62 130 L22 134M138 122 L178 112M138 130 L178 134" stroke="#8a4b2a" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M92 116h16l-8 9z" fill="#e87a90"/>
+  ${EYES(70,130,98)}
+  <g class="mouth-normal" fill="none" stroke="#6b3a24" stroke-width="3" stroke-linecap="round"><path d="M100 125v6M100 131q-8 8 -17 2M100 131q8 8 17 2"/></g>
+  <g class="mouth-happy"><path d="M82 130 Q100 156 118 130 Z" fill="#d9534f" stroke="#6b3a24" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="143" rx="9" ry="5.5" fill="#ff8fa3"/></g>
+  <g class="mouth-sad" fill="none" stroke="#6b3a24" stroke-width="3.5" stroke-linecap="round"><path d="M100 125v5M84 145 Q100 128 116 145"/></g>
+</g></svg>`;
+
+/* =====================================================
+   小工具
+   ===================================================== */
+const $ = s => document.querySelector(s);
+const NAME = {dog:"小狗", cat:"小貓"}, ICON = {dog:"🐶", cat:"🐱"};
+const other = w => w === "dog" ? "cat" : "dog";
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const pad = n => String(n).padStart(2,"0");
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+["#sDog","#avDog","#eDog"].forEach(s => $(s).innerHTML = SVG_DOG);
+["#sCat","#avCat","#eCat"].forEach(s => $(s).innerHTML = SVG_CAT);
+
+/* ---------- 音效 ---------- */
+let AC = null, muted = false;
+function tone(f, d = .15, type = "sine", delay = 0, vol = .16){
+  if(muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+const sfx = {
+  buzz(){ tone(880,.12,"square"); tone(660,.2,"square",.1); },
+  ok(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,"triangle",i*.1)); },
+  no(){ tone(330,.25,"sawtooth"); tone(220,.4,"sawtooth",.2); },
+  time(){ tone(200,.5,"square"); }
+};
+$("#muteBtn").onclick = () => { muted = !muted; $("#muteBtn").textContent = muted ? "🔇" : "🔊"; };
+
+/* ---------- 煙火 ---------- */
+const cv = $("#fx"), ctx = cv.getContext("2d");
+let parts = [], raf = null;
+function fit(){ const d = window.devicePixelRatio || 1; cv.width = innerWidth*d; cv.height = innerHeight*d; ctx.setTransform(d,0,0,d,0,0); }
+addEventListener("resize", fit); fit();
+function burst(x, y){
+  const hue = Math.random()*360;
+  for(let i=0;i<80;i++){
+    const a = Math.random()*Math.PI*2, sp = 2 + Math.random()*6;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,hue:hue+Math.random()*50,size:2+Math.random()*2.5});
+  }
+  if(!raf) raf = requestAnimationFrame(loopFx);
+}
+function loopFx(){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += .07; p.vx *= .985; p.life -= .011;
+    ctx.beginPath(); ctx.fillStyle = `hsla(${p.hue},95%,62%,${Math.max(p.life,0)})`;
+    ctx.arc(p.x,p.y,p.size,0,7); ctx.fill();
+  });
+  parts = parts.filter(p => p.life > 0);
+  raf = parts.length ? requestAnimationFrame(loopFx) : (ctx.clearRect(0,0,innerWidth,innerHeight), null);
+}
+function fireworks(){
+  for(let k=0;k<9;k++) setTimeout(() => burst(innerWidth*(.12+Math.random()*.76), innerHeight*(.12+Math.random()*.5)), k*260);
+}
+
+/* =====================================================
+   遊戲狀態
+   ===================================================== */
+const S = {qs:[], idx:0, score:{dog:0,cat:0}, phase:"idle", turn:null, first:null, tried:[], deadline:0, tid:null};
+
+function setAv(w, state){
+  const el = $(w === "dog" ? "#avDog" : "#avCat");
+  el.classList.remove("happy","sad");
+  if(state) el.classList.add(state);
+}
+function setScore(w){
+  const el = $(w === "dog" ? "#scDog" : "#scCat");
+  el.innerHTML = S.score[w] + "<small>分</small>";
+  el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+}
+function setMsg(t){ $("#msg").innerHTML = t; }
+function setActive(w){
+  $("#pDog").classList.toggle("active", w === "dog");
+  $("#pCat").classList.toggle("active", w === "cat");
+}
+function buzzUI(on){
+  ["dog","cat"].forEach(w => {
+    const b = $(w === "dog" ? "#bDog" : "#bCat");
+    b.disabled = !on; b.classList.toggle("ready", on);
+  });
+}
+
+/* ---------- 流程 ---------- */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("show"));
+  $(id).classList.add("show");
+}
+function startGame(){
+  tone(1,.01);            // 在使用者點擊時喚醒音效
+  const pool = QUESTIONS.filter(q => !q.off);
+  S.qs = shuffle(pool).slice(0, TOTAL);
+  S.idx = 0; S.score = {dog:0,cat:0};
+  setScore("dog"); setScore("cat");
+  showScreen("#game");
+  loadQuestion();
+}
+function loadQuestion(){
+  const q = S.qs[S.idx];
+  S.phase = "buzz"; S.turn = null; S.first = null; S.tried = [];
+  setAv("dog"); setAv("cat"); setActive(null);
+  $("#qno").textContent = `第 ${S.idx+1} / ${S.qs.length} 題`;
+  $("#qtext").innerHTML = esc(q.q).replace(/\n/g,"<br>");
+  $("#extra").innerHTML = q.html || "";
+  $("#hint").classList.remove("show"); $("#hint").textContent = "";
+  // 圖片（原檔截圖，找不到時顯示提示框）
+  const box = $("#imgBox"); box.innerHTML = "";
+  if(q.img){
+    const src = IMG_DIR + "q" + pad(q.n) + IMG_EXT;
+    const im = new Image(); im.className = "qimg"; im.alt = "第" + q.n + "題圖片"; im.src = src;
+    im.onclick = () => { $("#zoom img").src = src; $("#zoom").classList.add("show"); };
+    im.onerror = () => { box.innerHTML = `<div class="missing">🖼️ 找不到圖片：<b>${src}</b><br>請把題目截圖存成這個檔名</div>`; };
+    box.appendChild(im);
+  }
+  // 選項
+  const wrap = $("#opts"); wrap.innerHTML = ""; wrap.classList.add("locked");
+  q.opts.forEach((t, i) => {
+    const b = document.createElement("button");
+    b.className = "opt" + (q.optInImg ? " letterOnly" : "");
+    b.innerHTML = q.optInImg ? `<b>${"ABCD"[i]}</b>` : `<b>${"ABCD"[i]}</b><span>${esc(t)}</span>`;
+    b.onclick = () => pick(i);
+    wrap.appendChild(b);
+  });
+  $("#card").scrollTop = 0;
+  $("#nextBtn").style.display = "none";
+  setMsg("🔔 看完題目，先按<b>搶答鍵</b>的人才能作答！");
+  buzzUI(true);
+  startTimer();
+}
+
+/* ---------- 計時 ---------- */
+function startTimer(){
+  stopTimer(); S.deadline = Date.now() + TIME*1000; tick();
+  S.tid = setInterval(tick, 100);
+}
+function stopTimer(){ clearInterval(S.tid); S.tid = null; }
+function tick(){
+  const left = Math.max(0, S.deadline - Date.now()), s = Math.ceil(left/1000);
+  $("#timerNum").textContent = s;
+  $("#bar").style.width = (left/(TIME*1000)*100) + "%";
+  $("#timer").classList.toggle("warn", s <= 10);
+  if(left <= 0){ stopTimer(); timeUp(); }
+}
+
+/* ---------- 搶答 ---------- */
+function buzz(w){
+  if(S.phase !== "buzz") return;
+  S.phase = "answer"; S.turn = w; S.first = w;
+  sfx.buzz(); buzzUI(false); setActive(w);
+  $("#opts").classList.remove("locked");
+  setMsg(`${ICON[w]} <b>${NAME[w]}</b> 搶到了！請作答`);
+}
+$("#bDog").addEventListener("pointerdown", e => { e.preventDefault(); buzz("dog"); });
+$("#bCat").addEventListener("pointerdown", e => { e.preventDefault(); buzz("cat"); });
+addEventListener("keydown", e => {
+  if(!$("#game").classList.contains("show")) return;
+  if(e.key === "a" || e.key === "A") buzz("dog");
+  if(e.key === "l" || e.key === "L") buzz("cat");
+});
+
+/* ---------- 作答 ---------- */
+function pick(i){
+  if(S.phase !== "answer" || S.tried.includes(i)) return;
+  const q = S.qs[S.idx], w = S.turn, btns = $("#opts").children;
+  if(i === q.a){
+    S.score[w]++; setScore(w); stopTimer();
+    btns[i].classList.add("right");
+    setAv(w, "happy"); sfx.ok(); fireworks();
+    $("#opts").classList.add("locked"); S.phase = "result";
+    setMsg(`🎉 <b>${NAME[w]}</b> 答對了！+1 分`);
+    showNext();
+  }else{
+    S.score[w]--; setScore(w); S.tried.push(i);
+    btns[i].classList.add("wrong");
+    setAv(w, "sad"); sfx.no();
+    if(w === S.first){
+      // 第一位答錯：只給提示，不給答案，換另一位作答
+      S.phase = "switching";
+      $("#opts").classList.add("locked");
+      const h = $("#hint"); h.textContent = "💡 提示：" + q.hint; h.classList.add("show");
+      setMsg(`😿 <b>${NAME[w]}</b> 答錯了，−1 分！看提示，換 ${NAME[other(w)]} 作答…`);
+      setTimeout(() => {
+        if(S.phase !== "switching") return;
+        S.turn = other(w); S.phase = "answer";
+        setAv(w); setActive(S.turn);
+        $("#opts").classList.remove("locked");
+        setMsg(`${ICON[S.turn]} 輪到 <b>${NAME[S.turn]}</b> 作答！`);
+      }, 2400);
+    }else{
+      // 第二位也答錯：公布答案
+      stopTimer(); reveal();
+      S.phase = "result"; $("#opts").classList.add("locked");
+      setMsg(`😿 <b>${NAME[w]}</b> 也答錯了，−1 分。正確答案是 <b>${"ABCD"[q.a]}</b>`);
+      showNext();
+    }
+  }
+}
+function reveal(){ $("#opts").children[S.qs[S.idx].a].classList.add("right"); }
+function timeUp(){
+  if(S.phase === "result" || S.phase === "idle") return;
+  const wasBuzz = S.phase === "buzz", q = S.qs[S.idx];
+  S.phase = "result"; buzzUI(false); setActive(null);
+  $("#opts").classList.add("locked"); reveal(); sfx.time();
+  setMsg(wasBuzz
+    ? `⏰ 時間到！沒有人搶答，雙方各 0 分。正確答案是 <b>${"ABCD"[q.a]}</b>`
+    : `⏰ 時間到！正確答案是 <b>${"ABCD"[q.a]}</b>`);
+  showNext();
+}
+function showNext(){
+  buzzUI(false);
+  const b = $("#nextBtn");
+  b.textContent = S.idx >= S.qs.length - 1 ? "看成績 🏆" : "下一題 ▶";
+  b.style.display = "inline-block";
+}
+$("#nextBtn").onclick = () => {
+  if(S.phase !== "result") return;
+  if(S.idx >= S.qs.length - 1) return finish();
+  S.idx++; loadQuestion();
+};
+
+/* ---------- 結算 ---------- */
+function finish(){
+  stopTimer(); S.phase = "idle";
+  showScreen("#end");
+  $("#eDogS").textContent = S.score.dog; $("#eCatS").textContent = S.score.cat;
+  $("#scroll").classList.remove("open"); $("#again").style.display = "none";
+  $("#scrollTip").style.display = "block"; $("#paperIn").innerHTML = "";
+}
+$("#scroll").onclick = () => {
+  const sc = $("#scroll"); if(sc.classList.contains("open")) return;
+  const d = S.score.dog, c = S.score.cat; let html;
+  if(d === c){
+    html = `<div style="display:flex;justify-content:center;gap:10px"><div class="av happy" style="width:100px">${SVG_DOG}</div><div class="av happy" style="width:100px">${SVG_CAT}</div></div>
+            <div class="winner">🤝 平手！兩位都是贏家</div><div>雙方都是 ${d} 分</div>`;
+  }else{
+    const w = d > c ? "dog" : "cat";
+    html = `<div class="av happy">${w === "dog" ? SVG_DOG : SVG_CAT}</div>
+            <div class="winner">🏆 贏家是 ${ICON[w]} ${NAME[w]}！</div><div>${NAME[w]} ${S.score[w]} 分　vs　${NAME[other(w)]} ${S.score[other(w)]} 分</div>`;
+  }
+  html += `<div class="cong">恭喜~請去找老師領取獎勵</div>`;
+  $("#paperIn").innerHTML = html;
+  sc.classList.add("open"); $("#scrollTip").style.display = "none";
+  sfx.ok(); fireworks(); setTimeout(fireworks, 1800);
+  setTimeout(() => { $("#again").style.display = "inline-block"; }, 1200);
+};
+$("#again").onclick = () => startGame();
+$("#startBtn").onclick = startGame;
+$("#zoom").onclick = () => $("#zoom").classList.remove("show");
+</script>
+</body>
+</html>
