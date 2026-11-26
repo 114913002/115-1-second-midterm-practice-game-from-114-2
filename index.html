@@ -6,7 +6,6 @@
 <title>喵汪搶答大賽</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- 手寫字體：芫荽 Iansui、霞鶩文楷 TC（皆為 Google Fonts 繁體手寫風字體） -->
 <link href="https://fonts.googleapis.com/css2?family=Iansui&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#4a3520;--paper:rgba(255,251,236,.94);--dog:#4f9be0;--cat:#ef7aa6}
@@ -19,7 +18,6 @@ body{font-family:'Iansui','LXGW WenKai TC','DFKai-SB','BiauKai','標楷體',curs
 .hidden{display:none!important}
 .screen{position:fixed;inset:0;z-index:5;overflow:auto;padding:12px}
 
-/* 手繪紙卡 */
 .card{background:var(--paper);border:3px solid #6b4f2a;border-radius:20px 26px 18px 28px/26px 18px 28px 20px;box-shadow:4px 6px 0 rgba(90,60,20,.35)}
 button{font-family:inherit;color:var(--ink);cursor:pointer}
 
@@ -29,7 +27,7 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
 #start h1{margin:0 0 6px;font-size:clamp(34px,6vw,56px);letter-spacing:4px}
 #start .pair{display:flex;justify-content:center;gap:40px;margin:4px 0}
 #start .pair .avatar{width:150px;height:165px}
-#start ul{text-align:left;margin:8px auto;max-width:560px;line-height:1.7;font-size:clamp(16px,2.2vw,21px);padding-left:24px}
+#start ul{text-align:left;margin:8px auto;max-width:600px;line-height:1.7;font-size:clamp(16px,2.2vw,21px);padding-left:24px}
 .bigbtn{font-size:clamp(22px,3vw,30px);padding:10px 36px;margin-top:8px;background:#ffd54a;border:3px solid #6b4f2a;border-radius:30px 24px 32px 22px;box-shadow:3px 5px 0 rgba(90,60,20,.45);transition:transform .1s}
 .bigbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(90,60,20,.45)}
 .bigbtn:disabled{opacity:.5}
@@ -71,6 +69,18 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
 .status{font-size:clamp(17px,2.2vw,23px);text-align:center;padding:4px 10px;border-radius:14px;background:#fff1b8;border:2px dashed #b88a2a}
 .status.good{background:#c9f0c2;border-color:#3a9a3a}
 .status.bad{background:#ffd2cc;border-color:#d6453d}
+
+/* 5 秒作答倒數 */
+.ansRow{display:flex;align-items:center;gap:12px;padding:4px 12px;border:3px solid #6b4f2a;border-radius:16px;background:#fff;font-size:clamp(18px,2.4vw,26px);font-weight:700}
+.ansRow.dog{background:#dcecfb;border-color:var(--dog)}
+.ansRow.cat{background:#fde0ec;border-color:var(--cat)}
+.ansRow .atxt{white-space:nowrap}
+.ansRow .abar{flex:1;height:16px;border:2px solid #6b4f2a;border-radius:10px;overflow:hidden;background:#f1e5c0}
+.ansRow .abar i{display:block;height:100%;width:100%;background:#4fb35a;transition:width .1s linear}
+.ansRow.urgent .abar i{background:#d6453d}
+.ansRow.urgent .anum{color:#d6453d;animation:shake .5s infinite}
+.ansRow .anum{display:inline-block;min-width:1.2em;text-align:center}
+
 .qtext{font-size:clamp(20px,2.7vw,30px);line-height:1.55;font-weight:700}
 #qimg{max-width:100%;max-height:230px;align-self:center;background:#fff;border:2px solid #cbb98a}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -134,7 +144,6 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
 </head>
 <body>
 
-<!-- 共用濾鏡：水彩、色鉛筆紋理 -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <filter id="water" x="-15%" y="-15%" width="130%" height="130%">
@@ -168,8 +177,9 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
     <div class="pair"><div class="avatar" id="av-s-dog"></div><div class="avatar" id="av-s-cat"></div></div>
     <ul>
       <li>兩位同學共用一台平板：<b>小狗</b>在左、<b>小貓</b>在右。</li>
-      <li>題目出現後，<b>先按「搶答」</b>的人才有作答權。</li>
-      <li>答對 <b>+1 分</b>；答錯 <b>−1 分</b>（分數可以是負的），只給提示、不給答案，換另一位作答。</li>
+      <li>題目出現後，<b>先按「搶答」</b>的人先取得答題權，但要在 <b>5 秒內</b>作答。</li>
+      <li>5 秒內沒作答，答題權<b>自動換給另一方</b>；另一方沒作答或答錯，答題權又<b>回到原本的玩家</b>，依此輪流。</li>
+      <li>答對 <b>+1 分</b>；答錯 <b>−1 分</b>（分數可以是負的），只給提示、不給答案。</li>
       <li>每題 <b>90 秒</b>，兩人都沒作答則都 0 分。共 <b>20 題</b>，最後比出贏家！</li>
     </ul>
     <div id="bankInfo">題庫載入中…</div>
@@ -192,6 +202,7 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
       <div class="timer card" id="timer"><div class="timerNum" id="timerNum">⏱ 90</div><div class="bar"><i id="barI"></i></div></div>
       <div class="qcard card">
         <div class="status" id="status"></div>
+        <div class="ansRow hidden" id="ansRow"><span class="atxt" id="ansTxt"></span><div class="abar"><i id="ansI"></i></div></div>
         <div class="qtext" id="qtext"></div>
         <img id="qimg" class="hidden" alt="題目附圖">
         <div class="opts locked" id="opts"></div>
@@ -230,15 +241,13 @@ button{font-family:inherit;color:var(--ink);cursor:pointer}
 
 <script>
 /* ===================================================================
-   題庫：取自附檔 Word（第二次段考、CH4-3、CH3-3~3-4 隨堂進階卷、CH4-3~4-5 平時卷）
-   格式：Q(編號, 題目, [四個選項], 正解索引(0=A), 提示)
-   有圖題目：把原檔圖片放在 img/ 資料夾（檔名需與下方相同），圖片會原樣顯示，不做任何修改。
+   題庫：格式 Q(編號, 題目, [四個選項], 正解索引(0=A), 提示)
+   有圖題目：把原檔圖片放在 img/ 資料夾（檔名需與下方相同），圖片會原樣顯示。
    圖片不存在的題目會自動略過，不會出錯。
    =================================================================== */
 const IMG_DIR = 'img/';
 const Q = (id,q,o,a,h)=>({id,q,o,a,h});
 const ALL = [
-  /* ---- 有原圖的題目（圖檔名稱依 Word 內標示）---- */
   {id:'E1', q:'冠宇手握繩子1、2、3、4依序上下擺動（如附圖），使繩波向右前進，若按手部上下擺動的順序，則該繩波之波形為何？',
    img:'Y8B012U-3-6.jpg', optImgs:['Y8B012U-3-6A.jpg','Y8B012U-3-6B.jpg','Y8B012U-3-6C.jpg','Y8B012U-3-6D.jpg'], a:2,
    h:'波向右傳，右邊的點比較晚開始振動；依手部擺動的先後順序，推想每個點接下來往哪個方向動。'},
@@ -246,7 +255,6 @@ const ALL = [
    img:'Y8B012U-3-4.jpg', o:['0.75秒','2秒','3秒','3.25秒'], a:0,
    h:'先由頻率求出週期，再數一數圖中 A 到 B 共走了幾個波長。'},
 
-  /* ---- 第二次段考 ---- */
   Q('E2','甲物體以振動頻率1500赫茲發出聲音，強度為80分貝，乙物體以振動頻率6000赫茲發出聲音，強度為50分貝，哪一物體發出的聲音傳播較遠？',['甲','乙','兩者一樣遠','無法判斷'],0,'聲音傳得遠或近，和「響度（分貝）」有關，不是音調高低。'),
   Q('E4','身高180cm的冠名站在太陽下影子長為60cm，請問同時同地身高150cm的冠宇影子長度為？',['25cm','50cm','100cm','無法判斷'],1,'同一時間、同一地點，身高與影長成正比。'),
   Q('E8','已知黃光是由紅光及綠光混合而成，今有一物體只能吸收紅光而將其餘色光反射，則此物體以黃光照射時，人眼會看見什麼顏色？',['紅色','綠色','黃色','黑色'],1,'黃光裡有哪些色光？物體吸收哪一種？剩下被反射進眼睛的就是看到的顏色。'),
@@ -266,7 +274,6 @@ const ALL = [
   Q('E28','下列哪種色光的光束由空氣中射入三稜鏡後，經過三稜鏡不會產生色散現象？',['藍光','黃光','白光','紫光'],0,'色散是因為光裡含有多種色光，各色折射程度不同。哪一種光不是混合出來的？'),
   Q('E30','海平面上300公尺處的一架直升機以聲納探測海底深度，6秒後收到回聲，則海底深度為多少公尺？（空氣的聲速為300公尺／秒，海水的聲速為1200公尺／秒）',['600','1200','2400','4800'],2,'先算聲音在空氣中來回花的時間，剩下的才是在海水中來回的時間。'),
 
-  /* ---- CH4-3 光的折射與透鏡 ---- */
   Q('C2','將筷子插入盛水的燒杯中，可看到筷子好像斷成兩截，試判斷筷子經水的折射後成像的位置為何？',['成像在原物下方，筷子往下折','成像在原物上方，筷子往上折','筷子每次位置都不同，成像可能往上或往下折','無法判斷'],1,'光從水進入空氣時會偏離法線；眼睛沿著光線反向延長看過去，像會在哪裡？'),
   Q('C3','小美利用三條光線作圖並找出凸透鏡成像位置，下列有關此方法的敘述何者正確？',['平行主軸的光線經凸透鏡向外發散','通過鏡心的光線，會通過透鏡另一側焦點','通過透鏡焦點的光線，經過透鏡後平行主軸','成像位置只在凸透鏡右側的焦距到二倍焦距之間'],2,'回想凸透鏡的三條特殊光線：平行主軸、過焦點、過鏡心，各自會怎麼走？'),
   Q('C4','丸尾使用凸透鏡做實驗，p為蠟燭到鏡心距離（物距），q為紙屏至透鏡距離（像距），成像在紙屏上都是清楚的。實驗數據 (p, q)：(24, 120)、(30, 59)、(40, 40)、(120, 24)，單位 cm。試問焦距為多少 cm？',['20','40','60','120'],0,'找出物距＝像距的那一組，這時物體位在幾倍焦距的位置？'),
@@ -274,7 +281,6 @@ const ALL = [
   Q('C7','物體放在凸透鏡前焦點內，試問物體的位置和成像的描述，何者正確？',['成像為正立放大實像','將物體往凸透鏡靠近，最終可成正立縮小虛像','物體的位置在焦距內','物體的成像位置與物體不同側'],2,'物體在焦距內時，成的是實像還是虛像？像和物在透鏡的同一側還是不同側？'),
   Q('C9','一根蠟燭放在凹透鏡前的焦點外，若緩慢將蠟燭從焦點外移到焦點內，請問成像的性質將如何變化？',['成像一樣是正立縮小虛像，但像會逐漸變大','成像從正立放大虛像變成正立縮小虛像','成像從正立放大實像變成正立縮小實像','成像一樣是正立放大實像，但像會逐漸變大'],0,'凹透鏡不論物距多遠，成像的性質都一樣；改變的只有像的大小。'),
 
-  /* ---- CH3-3~3-4 聲波的反射、多變的聲音 ---- */
   Q('S1','太宇在山上向著站在對面山頭的小華大喊一聲「我喜歡妳」，不久後只聽到來自山壁的回聲。關於太宇回聲和原聲的比較，會改變的有以下哪一項？',['波長','頻率','聲速','傳播方向'],3,'聲音反射後仍在空氣中傳播；想想反射改變的是「往哪裡走」還是波本身的性質。'),
   Q('S2','小明在兩峭壁間對空鳴槍，鳴槍後2秒聽到左邊峭壁傳來回聲後，再經過2秒鐘聽到右邊峭壁傳來回聲，若當時聲速為340 m/s，試問小明相距左邊峭壁多少m？',['170','340','680','1020'],1,'回聲走的是「來回」的路程，所以距離是（聲速×時間）的一半。'),
   Q('S3','小明在兩峭壁間對空鳴槍，鳴槍後2秒聽到左邊峭壁的回聲，再經過2秒（即鳴槍後4秒）聽到右邊峭壁的回聲，聲速為340 m/s，試問兩峭壁距離多少m？',['340','680','1020','2040'],2,'先分別算出小明到左、右峭壁的距離，再把兩段加起來。'),
@@ -284,7 +290,6 @@ const ALL = [
   Q('S9','下列選項的分貝和頻率，何者可視為會影響聽力的噪音？',['100分貝，10000 Hz','130分貝，30000 Hz','70分貝，6000 Hz','40分貝，12 Hz'],0,'先篩掉人耳聽不到的頻率（可聽範圍約 20～20000 Hz），再比較哪個音量最大。'),
   Q('S10','小萬發現吉他上的Do音調太高，他想將音調降低，下列選項何者可達成此目的？',['將共振箱拆掉','換上一根較細的弦','將弦調鬆','換上一根較短的弦'],2,'弦越粗、越長、越鬆，音調越低；反過來則越高。'),
 
-  /* ---- CH4-3~4-5 平時卷 ---- */
   Q('P1','我們所使用的手機或電腦螢幕，都是由三原色光依照不同強度比例調整成我們所能接受的顏色，下列何者不是光的三原色？',['黃','紅','藍','綠'],0,'想想看：哪一種色光其實可以由另外兩種色光混合而成？'),
   Q('P2','生活中有許多和光學儀器有關，下列哪一種鏡片不是利用中間比兩側厚的透鏡？',['複式顯微鏡','近視眼鏡','老花眼鏡','遠視眼鏡'],1,'中間厚的是凸透鏡。近視、遠視、老花分別用哪種透鏡矯正？'),
   Q('P4','當紅、藍和綠光以相同強度的光，同時照射在一張白紙上，眼睛所見光的顏色為何種顏色？',['洋紅色','綠色','紫色','白色'],3,'紅、綠、藍是光的三原色，等量混合會變成什麼？'),
@@ -303,13 +308,15 @@ const ALL = [
 const $=s=>document.querySelector(s);
 const LET=['A','B','C','D'];
 const TOTAL_Q=20, TIME=90;
+const ANS_TIME=5;                 // 搶到答題權後的作答秒數
 const NAME={dog:'小狗',cat:'小貓'};
 const other=p=>p==='dog'?'cat':'dog';
 const score={dog:0,cat:0};
-let pool=[], list=[], idx=0, st='idle', first=null, turn=null, cur=null, wrongSet=new Set(), deadline=0, tid=null;
+/* st：idle / waiting（等人搶答）/ answering（有人持有答題權）/ reveal（公布答案）*/
+let pool=[], list=[], idx=0, st='idle', first=null, turn=null, cur=null, wrongSet=new Set(), deadline=0, ansDeadline=0, tid=null, hinted=false;
 const avT={};
 
-/* ===================== 音效（Web Audio，簡單提示音）===================== */
+/* ===================== 音效 ===================== */
 let AC=null;
 function tone(f,d,type='sine',v=.15,delay=0){
   try{
@@ -322,6 +329,7 @@ function tone(f,d,type='sine',v=.15,delay=0){
 const sBuzz=()=>{tone(660,.12,'square',.12);tone(880,.18,'square',.12,.08)};
 const sOK=()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.18,i*.1));
 const sBad=()=>{tone(300,.25,'sawtooth',.12);tone(200,.35,'sawtooth',.12,.2)};
+const sPass=()=>{tone(520,.12,'triangle',.15);tone(390,.2,'triangle',.15,.1)};
 
 /* ===================== 背景：寫實色鉛筆風遊樂園 ===================== */
 function buildScene(){
@@ -335,44 +343,35 @@ function buildScene(){
   <pattern id="hD" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(60)"><line x1="0" y1="0" x2="0" y2="6" stroke="#a8843f" stroke-width="1.2" opacity=".45"/></pattern>
   <pattern id="hY" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><line x1="0" y1="0" x2="0" y2="5" stroke="#e0a800" stroke-width="1.3" opacity=".55"/></pattern>
   </defs><g filter="url(#pencil)">`;
-  // 天空
   s+=`<rect x="-20" y="-20" width="1640" height="700" fill="url(#sky)"/><rect x="-20" y="-20" width="1640" height="700" fill="url(#hS)"/>`;
   s+=`<circle cx="1450" cy="110" r="62" fill="#ffe27a" opacity=".85"/><circle cx="1450" cy="110" r="62" fill="url(#hY)"/>`;
   [[250,120,1],[760,80,.8],[1050,150,.9]].forEach(([x,y,k])=>{
     s+=`<g transform="translate(${x} ${y}) scale(${k})" fill="#fff" stroke="#8fb0c2" stroke-width="3" opacity=".95"><ellipse cx="0" cy="0" rx="90" ry="34"/><ellipse cx="-50" cy="12" rx="55" ry="26"/><ellipse cx="55" cy="10" rx="62" ry="28"/><ellipse cx="10" cy="-20" rx="48" ry="26"/></g>`;
   });
-  // 遠山
   s+=`<path d="M-20 560 Q200 430 430 520 T860 500 T1260 520 T1640 450 V700 H-20Z" fill="#a9d99a"/><path d="M-20 560 Q200 430 430 520 T860 500 T1260 520 T1640 450 V700 H-20Z" fill="url(#hG2)"/>`;
-  // 雲霄飛車
   const segs=[[[420,610],[480,240],[610,240],[665,560]],[[665,560],[705,380],[790,380],[840,560]],[[840,560],[870,470],[930,440],[980,610]]];
   let d='M420 610';segs.forEach(g=>d+=` C${g[1]} ${g[2]} ${g[3]}`);
   segs.forEach(g=>{for(let t=0.05;t<1;t+=.16){const[x,y]=bez(g,t);s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="660" stroke="#8a5a34" stroke-width="5"/>`}});
   s+=`<path d="${d}" fill="none" stroke="#7a3f22" stroke-width="9"/><path d="${d}" transform="translate(0 14)" fill="none" stroke="#c0392b" stroke-width="5"/>`;
-  // 摩天輪
   const cx=1180,cy=370,R=205,cols=['#e74c3c','#f2b134','#3fa2d9','#5cb85c','#b565d9','#ff8fab'];
   s+=`<line x1="${cx}" y1="${cy}" x2="${cx-130}" y2="660" stroke="#7a5230" stroke-width="12"/><line x1="${cx}" y1="${cy}" x2="${cx+130}" y2="660" stroke="#7a5230" stroke-width="12"/><line x1="${cx-100}" y1="560" x2="${cx+100}" y2="560" stroke="#7a5230" stroke-width="6"/>`;
   s+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#d6453d" stroke-width="9"/><circle cx="${cx}" cy="${cy}" r="${R-38}" fill="none" stroke="#f2b134" stroke-width="5"/>`;
   for(let i=0;i<12;i++){const a=i*Math.PI/6,x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
     s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e8e0cc" stroke-width="4"/><line x1="${x}" y1="${y}" x2="${x}" y2="${y+16}" stroke="#555" stroke-width="2"/><rect x="${x-17}" y="${y+14}" width="34" height="28" rx="8" fill="${cols[i%6]}" stroke="#5a3d1c" stroke-width="3"/>`;}
   s+=`<circle cx="${cx}" cy="${cy}" r="16" fill="#f2b134" stroke="#5a3d1c" stroke-width="4"/>`;
-  // 旋轉木馬
   const kx=230,ky=560;
   for(let i=0;i<6;i++){const x1=kx-90+i*30;s+=`<polygon points="${kx},${ky-175} ${x1},${ky-95} ${x1+30},${ky-95}" fill="${i%2?'#fff':'#e04b3f'}" stroke="#7a3f22" stroke-width="2"/>`}
   s+=`<line x1="${kx}" y1="${ky-175}" x2="${kx}" y2="${ky-215}" stroke="#555" stroke-width="3"/><polygon points="${kx},${ky-215} ${kx+34},${ky-205} ${kx},${ky-195}" fill="#f2b134"/>`;
   for(let i=0;i<5;i++){const x=kx-80+i*40;s+=`<line x1="${x}" y1="${ky-95}" x2="${x}" y2="${ky}" stroke="#d9a21b" stroke-width="7"/>`}
   s+=`<rect x="${kx-100}" y="${ky}" width="200" height="30" rx="8" fill="#b9824f" stroke="#6b4f2a" stroke-width="3"/><rect x="${kx-100}" y="${ky}" width="200" height="30" fill="url(#hD)"/>`;
-  // 樹
   const tree=(x,y,k)=>{s+=`<g transform="translate(${x} ${y}) scale(${k})"><rect x="-12" y="-10" width="24" height="90" fill="#8a5a34"/><rect x="-12" y="-10" width="24" height="90" fill="url(#hD)"/><ellipse cx="0" cy="-50" rx="80" ry="70" fill="#5fb55a"/><ellipse cx="-45" cy="-10" rx="55" ry="45" fill="#4fa34e"/><ellipse cx="48" cy="-8" rx="55" ry="45" fill="#5fb55a"/><ellipse cx="0" cy="-50" rx="80" ry="70" fill="url(#hG)"/><ellipse cx="-45" cy="-10" rx="55" ry="45" fill="url(#hG2)"/></g>`};
   tree(80,590,1);tree(1500,600,1.1);tree(1000,610,.7);tree(420,625,.6);
-  // 地面
   s+=`<rect x="-20" y="640" width="1640" height="280" fill="url(#grassG)"/><rect x="-20" y="640" width="1640" height="280" fill="url(#hG)"/>`;
   s+=`<polygon points="660,900 940,900 860,640 740,640" fill="#ecd9a6"/><polygon points="660,900 940,900 860,640 740,640" fill="url(#hD)"/>`;
   for(let x=0;x<1600;x+=34){s+=`<rect x="${x}" y="648" width="14" height="44" fill="#fff" stroke="#9a8a6a" stroke-width="2"/>`}
   s+=`<line x1="0" y1="662" x2="1600" y2="662" stroke="#9a8a6a" stroke-width="4"/><line x1="0" y1="680" x2="1600" y2="680" stroke="#9a8a6a" stroke-width="4"/>`;
-  // 花
   const fc=['#ff6f91','#ffd23f','#ffffff','#b565d9'];
   for(let i=0;i<46;i++){const x=(i*173)%1600,y=720+((i*61)%160);s+=`<circle cx="${x}" cy="${y}" r="6" fill="${fc[i%4]}" stroke="#6b4f2a" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="2" fill="#f2b134"/>`}
-  // 氣球
   [[110,260,'#e74c3c'],[160,230,'#3fa2d9'],[135,300,'#f2b134'],[1400,300,'#b565d9'],[1450,260,'#ff8fab'],[1370,250,'#5cb85c']].forEach(([x,y,c])=>{
     s+=`<line x1="${x}" y1="${y+34}" x2="${x+(x<800?20:-20)}" y2="${y+130}" stroke="#666" stroke-width="2"/><ellipse cx="${x}" cy="${y}" rx="28" ry="36" fill="${c}" stroke="#5a3d1c" stroke-width="2.5" opacity=".92"/><ellipse cx="${x-9}" cy="${y-12}" rx="6" ry="10" fill="#fff" opacity=".55"/>`;});
   s+=`</g><rect width="1600" height="900" filter="url(#grain)" style="mix-blend-mode:multiply"/></svg>`;
@@ -474,7 +473,7 @@ function newGame(){
 function nextQuestion(initial){
   if(!initial)idx++;
   if(idx>=list.length){return showEnd()}
-  cur=list[idx];st='waiting';first=null;turn=null;wrongSet.clear();
+  cur=list[idx];st='waiting';first=null;turn=null;hinted=false;wrongSet.clear();
   $('#qn').textContent=idx+1;
   $('#qtext').textContent=cur.q;
   const qi=$('#qimg');
@@ -491,11 +490,13 @@ function nextQuestion(initial){
     box.appendChild(b);
   }
   $('#hint').classList.add('hidden');$('#nextBtn').classList.add('hidden');
+  $('#ansRow').classList.add('hidden');
   ['dog','cat'].forEach(p=>{$('#bz-'+p).disabled=false;$('#pl-'+p).classList.remove('turn','dim')});
-  setStatus('📣 搶答開始！先按「搶答」的人才能作答');
+  setStatus('📣 搶答開始！先按「搶答」的人先取得答題權（5 秒內要作答）');
   startTimer();
 }
 
+/* ---------- 90 秒總計時 + 5 秒作答計時（同一個計時器處理）---------- */
 function startTimer(){
   clearInterval(tid);deadline=Date.now()+TIME*1000;tick();tid=setInterval(tick,100);
 }
@@ -504,25 +505,60 @@ function tick(){
   $('#timerNum').textContent='⏱ '+Math.ceil(left);
   $('#barI').style.width=(left/TIME*100)+'%';
   $('#timer').classList.toggle('warn',left<=15);
-  if(left<=0)timeUp();
+  if(left<=0){timeUp();return}
+  if(st==='answering'){
+    const al=Math.max(0,(ansDeadline-Date.now())/1000);
+    $('#ansI').style.width=(al/ANS_TIME*100)+'%';
+    $('#anum').textContent=Math.ceil(al);
+    $('#ansRow').classList.toggle('urgent',al<=2);
+    if(al<=0)ansTimeout();
+  }
 }
 const stopTimer=()=>{clearInterval(tid);tid=null};
+
+/* 標示目前持有答題權的玩家 */
+function markTurn(){
+  ['dog','cat'].forEach(p=>{
+    const el=$('#pl-'+p);
+    el.classList.toggle('turn',p===turn);
+    el.classList.toggle('dim',p!==turn);
+  });
+}
+/* 開始某位玩家的 5 秒作答 */
+function startAns(p){
+  turn=p;ansDeadline=Date.now()+ANS_TIME*1000;
+  const row=$('#ansRow');
+  row.className='ansRow '+p;
+  row.innerHTML=`<span class="atxt">${p==='dog'?'🐶':'🐱'} ${NAME[p]}作答倒數 <span class="anum" id="anum">${ANS_TIME}</span> 秒</span><div class="abar"><i id="ansI"></i></div>`;
+  markTurn();
+}
+
+/* 5 秒沒作答：答題權換給另一方（不扣分） */
+function ansTimeout(){
+  if(st!=='answering')return;
+  const prev=turn,next=other(prev);
+  sPass();
+  const back=(next===first);
+  startAns(next);
+  setStatus(`⌛ ${NAME[prev]}5 秒內沒有作答，答題權${back?'回到':'換給'}${NAME[next]}！`,'bad');
+}
 
 function timeUp(){
   if(st==='reveal')return;
   stopTimer();
+  $('#ansRow').classList.add('hidden');
   if(st==='waiting')setStatus('⏰ 時間到！兩位都沒有作答，各 0 分','bad');
-  else setStatus(`⏰ 時間到！${NAME[turn]}沒有及時作答，不加不扣分`,'bad');
+  else setStatus('⏰ 時間到！這題結束，公布答案','bad');
   reveal();
 }
 
 function buzz(p){
   if(st!=='waiting')return;
-  sBuzz();st='answering';first=p;turn=p;
+  sBuzz();st='answering';first=p;
   ['dog','cat'].forEach(x=>{$('#bz-'+x).disabled=true});
-  $('#pl-'+p).classList.add('turn');$('#pl-'+other(p)).classList.add('dim');
   $('#opts').classList.remove('locked');
-  setStatus(`🔔 ${NAME[p]}搶到答題權！請選擇答案`);
+  startAns(p);
+  setStatus(`🔔 ${NAME[p]}搶到答題權！請在 ${ANS_TIME} 秒內選擇答案`);
 }
 
 function addScore(p,d){
@@ -533,7 +569,7 @@ function addScore(p,d){
 }
 
 function choose(i){
-  if((st!=='answering'&&st!=='second')||wrongSet.has(i))return;
+  if(st!=='answering'||wrongSet.has(i))return;
   const p=turn,btns=$('#opts').children;
   if(i===cur.a){
     stopTimer();addScore(p,1);sOK();celebrate(7);
@@ -543,22 +579,16 @@ function choose(i){
   }else{
     addScore(p,-1);sBad();setAv(p,'sad',2800);
     wrongSet.add(i);btns[i].classList.add('wrong');
-    if(st==='answering'){
-      st='second';turn=other(p);
-      $('#hint').textContent='💡 提示：'+cur.h;$('#hint').classList.remove('hidden');
-      $('#pl-'+p).classList.remove('turn');$('#pl-'+p).classList.add('dim');
-      $('#pl-'+turn).classList.remove('dim');$('#pl-'+turn).classList.add('turn');
-      setStatus(`😢 ${NAME[p]}答錯了，−1 分！換${NAME[turn]}作答`,'bad');
-    }else{
-      stopTimer();
-      setStatus(`😢 ${NAME[p]}也答錯了，−1 分！`,'bad');
-      reveal();
-    }
+    if(!hinted){hinted=true;$('#hint').textContent='💡 提示：'+cur.h;$('#hint').classList.remove('hidden')}
+    const next=other(p),back=(next===first);
+    startAns(next);
+    setStatus(`😢 ${NAME[p]}答錯了，−1 分！答題權${back?'回到':'換給'}${NAME[next]}（${ANS_TIME} 秒內作答）`,'bad');
   }
 }
 
 function reveal(){
   st='reveal';
+  $('#ansRow').classList.add('hidden');
   const btns=$('#opts').children;
   $('#opts').classList.remove('locked');
   btns[cur.a].classList.add('correct');
